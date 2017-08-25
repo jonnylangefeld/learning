@@ -1,0 +1,17 @@
+# Docker Verion: 1.13.0
+# Docker Compose Version: 1.10.1
+
+version: "3"
+
+services:
+    web1:
+        image: dockercloud/hello-world
+        container_name: web1
+        ports:
+            - "81:80"
+
+    web2:
+        image: dockercloud/hello-world
+        container_name: web2
+        ports:
+            - "82:80"
