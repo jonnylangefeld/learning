@@ -1,0 +1,78 @@
+# Author: Jonathan Langefeld
+# Docker Version: 1.13.0
+# Docker Compose Version: 1.10.1
+#
+
+version: "3"
+
+services:
+   traefik:
+     build: ./traefik
+     container_name: traefik
+     ports:
+       - "80:80"
+       - "443:443"
+       - "8080:8080"
+     volumes:
+       - /var/run/docker.sock:/var/run/docker.sock
+       - certs-volume:/certs
+
+   mariadb:
+     build: ./mariadb
+     volumes:
+       - db_data:/var/lib/mysql
+     container_name: mariadb
+     restart: always
+     ports:
+       - "3306:3306"
+     environment:
+       MYSQL_ROOT_PASSWORD: Passw0rd
+
+   phpmyadmin:
+     image: phpmyadmin/phpmyadmin:4.7
+     depends_on:
+       - mariadb
+     volumes:
+       - phpmyadmin-sessions:/sessions
+     container_name: phpmyadmin
+     restart: always
+     ports:
+       - "8000:80"
+     labels:
+       - "traefik.enable=true"
+       - "traefik.backend=phpmyadmin"
+       - "traefik.phpmyadmin.port=80"
+       - "traefik.phpmyadmin.frontend.rule=Host:phpmyadmin.HOSTDOMAIN"
+       - "traefik.phpmyadmin.frontend.entryPoints=http,https"
+     links:
+       - mariadb:db
+
+   metabase:
+     image: metabase/metabase:v0.24.2
+     depends_on:
+      - mariadb
+     container_name: metabase
+     restart: always
+     ports:
+      - "3000:3000"
+     labels:
+      - "traefik.enable=true"
+      - "traefik.backend=metabase"
+      - "traefik.metabase.port=3000"
+      - "traefik.metabase.frontend.rule=Host:metabase.HOSTDOMAIN"
+      - "traefik.metabase.frontend.entryPoints=http,https"
+     links:
+      - mariadb
+     environment:
+       MB_DB_TYPE: mysql
+       MB_DB_DBNAME: metabase
+       MB_DB_PORT: 3306
+       MB_DB_USER: root
+       MB_DB_PASS: Passw0rd
+       MB_DB_HOST: mariadb
+       MB_PASSWORD_COMPLEXITY: weak
+
+volumes:
+    db_data:
+    phpmyadmin-sessions:
+    certs-volume:

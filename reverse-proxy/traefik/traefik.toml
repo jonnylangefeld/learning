@@ -1,0 +1,39 @@
+################################################################
+# Web configuration backend
+################################################################
+
+logLevel = "DEBUG"
+defaultEntryPoints = ["http", "https"]
+
+[entryPoints]
+    [entryPoints.http]
+        address = ":80"
+        [entryPoints.http.redirect]
+            entryPoint = "https"
+    [entryPoints.https]
+        address = ":443"
+        [entryPoints.https.tls]
+
+[acme]
+    email = "jonathan.langefeld@energy-smart.de"
+    storage = "/certs/acme.json"
+    onDemand = true
+    entryPoint = "https"
+    caServer = "https://acme-v01.api.letsencrypt.org/directory"
+#    caServer = "https://acme-staging.api.letsencrypt.org/directory"
+
+    [[acme.domains]]
+        main = "management.HOSTDOMAIN"
+        sans = [
+            "metabase.HOSTDOMAIN",
+            "phpmyadmin.HOSTDOMAIN",
+            "anaconda.HOSTDOMAIN"
+        ]
+
+[web]
+    address = ":8080"
+
+[docker]
+    endpoint = "unix:///var/run/docker.sock"
+    domain = "management.HOSTDOMAIN"
+    exposedbydefault = false
